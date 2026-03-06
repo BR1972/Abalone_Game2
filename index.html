@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Abalone">
+<meta name="theme-color" content="#0a0a0f">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<title>Abalone</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --border: #1e1e2e;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #7a6430;
+    --marble-black: #1a1a2e;
+    --marble-white: #e8e0d0;
+    --marble-black-shine: #2e2e50;
+    --marble-white-shine: #ffffff;
+    --text: #c8c0b0;
+    --text-dim: #5a5060;
+    --board: #2a1f0e;
+    --board-light: #3a2f1a;
+    --cell-empty: #1a140a;
+    --cell-hover: rgba(201,168,76,0.15);
+    --cell-selected: rgba(201,168,76,0.35);
+    --cell-valid: rgba(100,200,120,0.2);
+    --shadow: 0 20px 60px rgba(0,0,0,0.8);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lato', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background: radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 80%, rgba(100,80,200,0.03) 0%, transparent 60%);
+    pointer-events:none;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.4);
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .game-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    padding: 0 16px;
+  }
+
+  .side-panel {
+    width: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .panel-box h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .score-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .score-player {
+    text-align: center;
+  }
+
+  .score-name {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .score-value {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .score-value.black { color: #8888cc; }
+  .score-value.white { color: var(--gold-light); }
+
+  .score-divider {
+    color: var(--border);
+    font-size: 1.2rem;
+  }
+
+  .turn-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--cell-empty);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+
+  .turn-indicator.active {
+    border-color: var(--gold-dim);
+    background: rgba(201,168,76,0.05);
+  }
+
+  .turn-marble {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .turn-marble.b { background: radial-gradient(circle at 35% 35%, var(--marble-black-shine), var(--marble-black)); box-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+  .turn-marble.w { background: radial-gradient(circle at 35% 35%, var(--marble-white-shine), var(--marble-white)); box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+
+  .turn-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+
+  .turn-indicator.active .turn-label { color: var(--text); }
+
+  .log-box {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 200px;
+  }
+
+  .log-entry {
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    padding: 2px 0;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.05em;
+  }
+
+  .log-entry:first-child { color: var(--text); }
+
+  .btn {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover {
+    background: rgba(201,168,76,0.1);
+    border-color: var(--gold);
+  }
+
+  /* BOARD */
+  .board-container {
+    position: relative;
+  }
+
+  svg#board {
+    filter: drop-shadow(0 20px 60px rgba(0,0,0,0.9));
+  }
+
+  .cell-bg {
+    cursor: pointer;
+    transition: fill 0.15s;
+  }
+  .cell-bg:hover { fill: rgba(201,168,76,0.12); }
+  .cell-bg.selected { fill: rgba(201,168,76,0.3); }
+  .cell-bg.valid-move { fill: rgba(100,210,130,0.18); }
+  .cell-bg.push-move { fill: rgba(200,120,80,0.18); }
+
+  .marble {
+    cursor: pointer;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    transform-origin: center;
+  }
+  .marble.selected { transform: scale(1.15); }
+  .marble.selectable:hover { transform: scale(1.08); }
+
+  .push-arrow {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    max-width: 320px;
+    box-shadow: var(--shadow);
+  }
+
+  .modal h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .modal p {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    margin-bottom: 24px;
+  }
+
+  .modal .btn { width: auto; padding: 12px 32px; display: inline-block; }
+
+  .thinking {
+    font-size: 0.65rem;
+    color: var(--gold-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    text-align: center;
+    height: 16px;
+    margin-bottom: 6px;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  .thinking.active { animation: pulse 1.2s ease-in-out infinite; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .mode-btn, .level-btn {
+    flex: 1;
+    padding: 12px 8px;
+    background: var(--cell-empty);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-dim);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .mode-btn span, .level-btn span {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+  .mode-btn:hover, .level-btn:hover {
+    border-color: var(--gold-dim);
+    color: var(--text);
+  }
+  .mode-btn.active, .level-btn.active {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.1);
+    color: var(--gold);
+  }
+  .mode-btn.active span, .level-btn.active span { color: var(--gold-dim); }
+
+  .level-easy.active { border-color: #60d060; background: rgba(96,208,96,0.08); color: #60d060; }
+  .level-medium.active { border-color: var(--gold); background: rgba(201,168,76,0.08); color: var(--gold); }
+  .level-hard.active { border-color: #e06060; background: rgba(224,96,96,0.08); color: #e06060; }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    font-family: 'Cinzel', serif;
+  }
+  .badge.easy { background: rgba(96,208,96,0.15); color: #60d060; border: 1px solid rgba(96,208,96,0.3); }
+  .badge.medium { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+  .badge.hard { background: rgba(224,96,96,0.15); color: #e06060; border: 1px solid rgba(224,96,96,0.3); }
+
+</style>
+</head>
+<body>
+
+<h1>ABALONE</h1>
+<p class="subtitle" id="subtitle">Jeu de stratégie</p>
+
+<!-- Setup Modal -->
+<div class="modal-overlay show" id="setup-modal">
+  <div class="modal" style="max-width:380px">
+    <h2 style="margin-bottom:6px">ABALONE</h2>
+    <p style="margin-bottom:28px">Configurez votre partie</p>
+
+    <div style="margin-bottom:20px; text-align:left">
+      <div class="panel-box h3" style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Mode de jeu</div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="mode-btn active" id="mode-1p" onclick="selectMode('1p')">👤 1 Joueur<br><span>vs IA</span></button>
+        <button class="mode-btn" id="mode-2p" onclick="selectMode('2p')">👥 2 Joueurs<br><span>Local</span></button>
+      </div>
+    </div>
+
+    <div id="ai-options" style="margin-bottom:24px;text-align:left">
+      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Niveau de l'IA</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="level-btn" id="level-easy" onclick="selectLevel('easy')">🌱<br><span>Facile</span></button>
+        <button class="level-btn active" id="level-medium" onclick="selectLevel('medium')">⚔️<br><span>Moyen</span></button>
+        <button class="level-btn" id="level-hard" onclick="selectLevel('hard')">🔥<br><span>Difficile</span></button>
+      </div>
+    </div>
+
+    <button class="btn" style="width:auto;padding:13px 40px;font-size:0.8rem" onclick="startGame()">Commencer</button>
+  </div>
+</div>
+
+<div class="game-layout">
+  <!-- Left panel -->
+  <div class="side-panel">
+    <div class="panel-box">
+      <h3>Score</h3>
+      <div class="score-display">
+        <div class="score-player">
+          <div class="score-name">Noir</div>
+          <div class="score-value black" id="score-b">0</div>
+        </div>
+        <div class="score-divider">·</div>
+        <div class="score-player">
+          <div class="score-name">Blanc</div>
+          <div class="score-value white" id="score-w">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-box">
+      <h3>Tour</h3>
+      <div id="turn-b" class="turn-indicator active">
+        <div class="turn-marble b"></div>
+        <span class="turn-label">Vous (Noir)</span>
+      </div>
+      <div style="height:6px"></div>
+      <div id="turn-w" class="turn-indicator">
+        <div class="turn-marble w"></div>
+        <span class="turn-label">IA (Blanc)</span>
+      </div>
+    </div>
+
+    <div class="panel-box" style="flex:1">
+      <h3>Journal</h3>
+      <div class="log-box" id="log"></div>
+    </div>
+
+    <button class="btn" onclick="showSetup()" style="margin-bottom:6px">Paramètres</button>
+    <button class="btn" onclick="resetGame()">Nouvelle Partie</button>
+  </div>
+
+  <!-- Board -->
+  <div class="board-container">
+    <div class="thinking" id="thinking"></div>
+    <svg id="board" width="520" height="480" viewBox="0 0 520 480"></svg>
+  </div>
+
+  <!-- Right panel: ejected marbles display -->
+  <div class="side-panel">
+    <div class="panel-box">
+      <h3>Billes éjectées</h3>
+      <div style="margin-bottom:8px">
+        <div class="score-name" style="margin-bottom:6px">Noirs éjectés</div>
+        <svg id="ejected-b" width="128" height="60"></svg>
+      </div>
+      <div>
+        <div class="score-name" style="margin-bottom:6px">Blancs éjectés</div>
+        <svg id="ejected-w" width="128" height="60"></svg>
+      </div>
+    </div>
+
+    <div class="panel-box">
+      <h3>Règles</h3>
+      <div style="font-size:0.6rem; color:var(--text-dim); line-height:1.7; letter-spacing:0.05em;">
+        <b style="color:var(--text)">Sélection :</b><br>
+        Cliquez 1, 2 ou 3 billes alignées.<br><br>
+        <b style="color:var(--text)">Déplacement :</b><br>
+        Cliquez une case adjacente valide.<br><br>
+        <b style="color:var(--text)">Sumito :</b><br>
+        Poussez les billes adverses si vous êtes plus nombreux.<br><br>
+        <b style="color:var(--text)">Victoire :</b><br>
+        Éjectez 6 billes adverses.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Win modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">Victoire !</h2>
+    <p id="modal-msg">Les noirs ont gagné la partie.</p>
+    <button class="btn" style="width:auto;padding:12px 32px;display:inline-block;margin-right:8px" onclick="showSetup()">Paramètres</button>
+    <button class="btn" style="width:auto;padding:12px 32px;display:inline-block" onclick="resetGame()">Rejouer</button>
+  </div>
+</div>
+
+<script>
+// ========================
+// ABALONE ENGINE
+// ========================
+
+// Hexagonal grid: axial coordinates (q, r)
+// Board = hex of radius 4 (cells from -4 to 4)
+
+const R = 4; // board radius
+
+// All valid cells
+function validCell(q, r) {
+  return Math.abs(q) <= R && Math.abs(r) <= R && Math.abs(q+r) <= R;
+}
+
+// 6 hex directions
+const DIRS = [
+  [1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]
+];
+
+// Convert axial to key
+function key(q,r){ return `${q},${r}`; }
+function fromKey(k){ const [q,r]=k.split(',').map(Number); return [q,r]; }
+
+// Starting positions
+function initialBoard() {
+  const board = {};
+  // Black (bottom)
+  const blackCells = [
+    [-4,4],[-3,4],[-2,4],[-1,4],[0,4],
+    [-4,3],[-3,3],[-2,3],[-1,3],[0,3],[1,3],
+    [-2,2],[-1,2],[0,2]
+  ];
+  // White (top)
+  const whiteCells = [
+    [4,-4],[3,-4],[2,-4],[1,-4],[0,-4],
+    [4,-3],[3,-3],[2,-3],[1,-3],[0,-3],[-1,-3],
+    [2,-2],[1,-2],[0,-2]
+  ];
+  blackCells.forEach(([q,r]) => board[key(q,r)] = 'b');
+  whiteCells.forEach(([q,r]) => board[key(q,r)] = 'w');
+  return board;
+}
+
+// ========================
+// MOVE GENERATION
+// ========================
+
+// Get inline direction from a group of cells (must be collinear)
+function getInlineDir(cells) {
+  if(cells.length === 1) return null;
+  const [q0,r0] = cells[0];
+  const [q1,r1] = cells[1];
+  const dq = q1-q0, dr = r1-r0;
+  // normalize
+  const g = Math.max(Math.abs(dq), Math.abs(dr));
+  return [dq/g, dr/g];
+}
+
+// Check if cells are collinear
+function areCollinear(cells) {
+  if(cells.length <= 1) return true;
+  const sorted = [...cells].sort((a,b) => a[0]-b[0] || a[1]-b[1]);
+  const dq = sorted[1][0]-sorted[0][0];
+  const dr = sorted[1][1]-sorted[0][1];
+  for(let i=2;i<sorted.length;i++){
+    if(sorted[i][0]-sorted[i-1][0] !== dq || sorted[i][1]-sorted[i-1][1] !== dr) return false;
+  }
+  return true;
+}
+
+// Sort cells along direction
+function sortCells(cells, dq, dr) {
+  return [...cells].sort((a,b) => {
+    const va = a[0]*dq + a[1]*dr;
+    const vb = b[0]*dq + b[1]*dr;
+    return va - vb;
+  });
+}
+
+// Generate all valid moves for a player
+function getMoves(board, player, selected=null) {
+  const opponent = player==='b'?'w':'b';
+  const playerCells = Object.entries(board)
+    .filter(([k,v])=>v===player)
+    .map(([k])=>fromKey(k));
+
+  const moves = [];
+
+  // Generate moves for groups of 1, 2, 3
+  const groups = [];
+  // Singles
+  playerCells.forEach(c => groups.push([c]));
+  // Pairs
+  playerCells.forEach(c => {
+    DIRS.forEach(([dq,dr]) => {
+      const n = [c[0]+dq, c[1]+dr];
+      if(board[key(...n)]===player) {
+        const pair = [c, n];
+        // avoid duplicates
+        const sorted = [...pair].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+        if(!groups.some(g=>g.length===2 && g[0][0]===sorted[0][0]&&g[0][1]===sorted[0][1]&&g[1][0]===sorted[1][0]&&g[1][1]===sorted[1][1])){
+          groups.push(sorted);
+        }
+      }
+    });
+  });
+  // Triples
+  playerCells.forEach(c => {
+    DIRS.forEach(([dq,dr]) => {
+      const n1 = [c[0]+dq,c[1]+dr];
+      const n2 = [c[0]+2*dq,c[1]+2*dr];
+      if(board[key(...n1)]===player && board[key(...n2)]===player) {
+        const triple = [c,n1,n2];
+        const sorted = [...triple].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+        if(!groups.some(g=>g.length===3 && g[0][0]===sorted[0][0]&&g[0][1]===sorted[0][1]&&g[2][0]===sorted[2][0]&&g[2][1]===sorted[2][1])){
+          groups.push(sorted);
+        }
+      }
+    });
+  });
+
+  groups.forEach(group => {
+    if(selected && !arraysEqual(group, selected)) return;
+
+    DIRS.forEach(([dq,dr]) => {
+      const inlineDir = group.length > 1 ? getInlineDir(group) : null;
+      const isInline = inlineDir && (inlineDir[0]===dq&&inlineDir[1]===dr || inlineDir[0]===-dq&&inlineDir[1]===-dr);
+
+      if(isInline || group.length===1) {
+        // Inline move - push direction
+        const sorted = group.length>1 ? sortCells(group, dq, dr) : group;
+        const front = sorted[sorted.length-1];
+        const target = [front[0]+dq, front[1]+dr];
+        const tKey = key(...target);
+
+        if(!validCell(...target)) return; // off board
+
+        if(!board[tKey]) {
+          // Free move
+          moves.push({group:[...group], dir:[dq,dr], type:'inline', push:[]});
+        } else if(board[tKey]===opponent && group.length > 1) {
+          // Possible push (sumito)
+          let oppLine = [];
+          let cur = [...target];
+          while(board[key(...cur)]===opponent) {
+            oppLine.push([...cur]);
+            cur = [cur[0]+dq, cur[1]+dr];
+          }
+          // Can push if own > opponent
+          if(oppLine.length < group.length) {
+            const afterLast = cur;
+            if(!validCell(...afterLast) || !board[key(...afterLast)]) {
+              moves.push({group:[...group], dir:[dq,dr], type:'push', push:[...oppLine], eject: !validCell(...afterLast)});
+            }
+          }
+        }
+      } else {
+        // Broadside move
+        let valid = true;
+        for(const cell of group) {
+          const t = [cell[0]+dq, cell[1]+dr];
+          if(!validCell(...t) || board[key(...t)]) { valid=false; break; }
+        }
+        if(valid) {
+          moves.push({group:[...group], dir:[dq,dr], type:'broadside', push:[]});
+        }
+      }
+    });
+  });
+
+  return moves;
+}
+
+function arraysEqual(a, b) {
+  if(a.length!==b.length) return false;
+  const sa = [...a].sort((x,y)=>x[0]-y[0]||x[1]-y[1]);
+  const sb = [...b].sort((x,y)=>x[0]-y[0]||x[1]-y[1]);
+  return sa.every((v,i)=>v[0]===sb[i][0]&&v[1]===sb[i][1]);
+}
+
+// Apply a move to board, return new board + ejected
+function applyMove(board, move) {
+  const nb = {...board};
+  const {group, dir:[dq,dr], type, push} = move;
+  const player = nb[key(...group[0])];
+  const opponent = player==='b'?'w':'b';
+
+  // Remove group
+  group.forEach(c => delete nb[key(...c)]);
+  // Move push line
+  if(push.length > 0) {
+    const sorted = sortCells(push, dq, dr);
+    for(let i=sorted.length-1;i>=0;i--) {
+      const c=sorted[i];
+      const next=[c[0]+dq,c[1]+dr];
+      delete nb[key(...c)];
+      if(validCell(...next)) nb[key(...next)] = opponent;
+      // else ejected
+    }
+  }
+  // Place group
+  group.forEach(c => {
+    const next=[c[0]+dq,c[1]+dr];
+    nb[key(...next)] = player;
+  });
+
+  return nb;
+}
+
+// Count ejected
+function countEjected(board) {
+  const b = Object.values(board).filter(v=>v==='b').length;
+  const w = Object.values(board).filter(v=>v==='w').length;
+  return { bEjected: 14-b, wEjected: 14-w };
+}
+
+// ========================
+// AI (minimax)
+// ========================
+
+function evaluateBoard(board) {
+  const {bEjected, wEjected} = countEjected(board);
+  if(wEjected>=6) return 10000;
+  if(bEjected>=6) return -10000;
+
+  let score = (wEjected - bEjected) * 100;
+
+  // Center bonus
+  Object.entries(board).forEach(([k,v]) => {
+    const [q,r] = fromKey(k);
+    const dist = Math.max(Math.abs(q), Math.abs(r), Math.abs(q+r));
+    const centerScore = (4 - dist);
+    if(v==='w') score += centerScore * 3;
+    else score -= centerScore * 3;
+  });
+
+  return score;
+}
+
+function minimax(board, depth, alpha, beta, maximizing) {
+  const {bEjected, wEjected} = countEjected(board);
+  if(wEjected>=6 || bEjected>=6 || depth===0) {
+    return evaluateBoard(board);
+  }
+
+  const player = maximizing ? 'w' : 'b';
+  const moves = getMoves(board, player);
+
+  if(!moves.length) return evaluateBoard(board);
+
+  if(maximizing) {
+    let best = -Infinity;
+    for(const m of moves) {
+      const nb = applyMove(board, m);
+      const val = minimax(nb, depth-1, alpha, beta, false);
+      best = Math.max(best, val);
+      alpha = Math.max(alpha, best);
+      if(beta <= alpha) break;
+    }
+    return best;
+  } else {
+    let best = Infinity;
+    for(const m of moves) {
+      const nb = applyMove(board, m);
+      const val = minimax(nb, depth-1, alpha, beta, true);
+      best = Math.min(best, val);
+      beta = Math.min(beta, best);
+      if(beta <= alpha) break;
+    }
+    return best;
+  }
+}
+
+function getBestMove(board) {
+  const moves = getMoves(board, 'w');
+  if(!moves.length) return null;
+  const shuffled = moves.sort(()=>Math.random()-0.5);
+  const cfg = DIFFICULTY[aiLevel] || DIFFICULTY.medium;
+
+  // Random move for easy difficulty
+  if(Math.random() < cfg.random) return shuffled[0];
+
+  let best = -Infinity, bestMove = shuffled[0];
+  for(const m of shuffled) {
+    const nb = applyMove(board, m);
+    const val = minimax(nb, cfg.depth, -Infinity, Infinity, false);
+    if(val > best) { best=val; bestMove=m; }
+  }
+  return bestMove;
+}
+
+// ========================
+// DIFFICULTY CONFIG
+// ========================
+
+const DIFFICULTY = {
+  easy:   { depth: 1, random: 0.6 },
+  medium: { depth: 2, random: 0.15 },
+  hard:   { depth: 3, random: 0.0 }
+};
+
+// ========================
+// GAME CONFIG
+// ========================
+
+let gameMode = '1p';
+let aiLevel = 'medium';
+
+function selectMode(m) {
+  gameMode = m;
+  document.getElementById('mode-1p').className = 'mode-btn' + (m==='1p'?' active':'');
+  document.getElementById('mode-2p').className = 'mode-btn' + (m==='2p'?' active':'');
+  document.getElementById('ai-options').style.display = m==='1p' ? 'block' : 'none';
+}
+
+function selectLevel(l) {
+  aiLevel = l;
+  ['easy','medium','hard'].forEach(lv => {
+    document.getElementById('level-'+lv).className = 'level-btn' + (lv===l?' active level-'+lv:'');
+  });
+}
+
+function showSetup() {
+  document.getElementById('modal').classList.remove('show');
+  document.getElementById('setup-modal').classList.add('show');
+}
+
+function startGame() {
+  document.getElementById('setup-modal').classList.remove('show');
+  if(gameMode==='1p') {
+    const labels = {easy:'Facile',medium:'Moyen',hard:'Difficile'};
+    document.getElementById('subtitle').innerHTML =
+      `1 joueur — Vous jouez les noirs &nbsp;<span class="badge ${aiLevel}">IA ${labels[aiLevel]}</span>`;
+  } else {
+    document.getElementById('subtitle').textContent = '2 joueurs — Noir vs Blanc';
+  }
+  resetGame();
+}
+
+// ========================
+// RENDERING
+// ========================
+
+const SVG_W = 520, SVG_H = 480;
+const CX = SVG_W/2, CY = SVG_H/2;
+const HEX_SIZE = 26; // cell radius
+const MARBLE_R = 14;
+
+// Axial to pixel (flat-top)
+function axialToPixel(q, r) {
+  const x = CX + HEX_SIZE * 1.732 * (q + r/2);
+  const y = CY + HEX_SIZE * 1.5 * r;
+  return [x, y];
+}
+
+function makeSVGEl(tag, attrs={}) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+  return el;
+}
+
+// ========================
+// GAME STATE
+// ========================
+
+let board, turn, selected, validMoves, gameOver, log;
+
+function resetGame() {
+  board = initialBoard();
+  turn = 'b';
+  selected = [];
+  validMoves = [];
+  gameOver = false;
+  log = [];
+  document.getElementById('modal').classList.remove('show');
+  updateUI();
+  addLog('Nouvelle partie démarrée');
+}
+
+function addLog(msg) {
+  log.unshift(msg);
+  if(log.length>30) log.pop();
+  const el = document.getElementById('log');
+  el.innerHTML = log.map(l=>`<div class="log-entry">${l}</div>`).join('');
+}
+
+// ========================
+// CLICK HANDLING
+// ========================
+
+function handleCellClick(q, r) {
+  if(gameOver) return;
+  // In 2p mode both players can click; in 1p only black
+  if(gameMode==='1p' && turn!=='b') return;
+
+  const k = key(q, r);
+  const piece = board[k];
+
+  // If clicking valid move target
+  const vm = validMoves.find(m => {
+    const dest = m.group.map(c => [c[0]+m.dir[0], c[1]+m.dir[1]]);
+    return dest.some(c => c[0]===q && c[1]===r);
+  });
+
+  if(vm) {
+    executeMove(vm, turn);
+    return;
+  }
+
+  // Select / deselect — only own pieces
+  if(piece !== turn) {
+    selected = [];
+    validMoves = [];
+    updateBoard();
+    return;
+  }
+
+  const idx = selected.findIndex(c=>c[0]===q&&c[1]===r);
+  if(idx>=0) {
+    selected.splice(idx,1);
+  } else {
+    if(selected.length >= 3) {
+      selected = [[q,r]];
+    } else if(selected.length === 0) {
+      selected = [[q,r]];
+    } else {
+      // Check collinearity
+      const candidate = [...selected, [q,r]];
+      if(areCollinear(candidate)) {
+        // Check contiguity
+        if(isContiguous(candidate)) {
+          selected = candidate;
+        } else {
+          selected = [[q,r]];
+        }
+      } else {
+        selected = [[q,r]];
+      }
+    }
+  }
+
+  // Compute valid moves
+  if(selected.length > 0) {
+    const sortedSel = [...selected].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+    validMoves = getMoves(board, 'b', sortedSel);
+  } else {
+    validMoves = [];
+  }
+
+  updateBoard();
+}
+
+function isContiguous(cells) {
+  if(cells.length<=1) return true;
+  const sorted = [...cells].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  for(let i=1;i<sorted.length;i++){
+    const dq=Math.abs(sorted[i][0]-sorted[i-1][0]);
+    const dr=Math.abs(sorted[i][1]-sorted[i-1][1]);
+    const ds=Math.abs(sorted[i][0]+sorted[i][1]-sorted[i-1][0]-sorted[i-1][1]);
+    if(dq+dr+ds!==2) return false;
+  }
+  return true;
+}
+
+function executeMove(move, player) {
+  const {bEjected: be0, wEjected: we0} = countEjected(board);
+  board = applyMove(board, move);
+  const {bEjected: be1, wEjected: we1} = countEjected(board);
+
+  const playerLabel = player==='b'
+    ? (gameMode==='2p' ? '⬛ Joueur 1 (Noir)' : '⬛ Vous (Noir)')
+    : (gameMode==='2p' ? '⬜ Joueur 2 (Blanc)' : '⬜ IA (Blanc)');
+  let logMsg = playerLabel + ' joue';
+  if(move.type==='push') {
+    logMsg += ' (Sumito)';
+    if(we1 > we0) logMsg += ` — Blanc éjecté !`;
+    if(be1 > be0) logMsg += ` — Noir éjecté !`;
+  }
+  addLog(logMsg);
+
+  selected = [];
+  validMoves = [];
+
+  // Check win
+  if(we1 >= 6) { endGame('b'); return; }
+  if(be1 >= 6) { endGame('w'); return; }
+
+  turn = player==='b' ? 'w' : 'b';
+  updateUI();
+
+  if(gameMode==='1p' && turn==='w') {
+    setTimeout(aiTurn, 500);
+  }
+}
+
+function aiTurn() {
+  if(gameOver || turn!=='w') return;
+  showThinking(true);
+  setTimeout(() => {
+    const move = getBestMove(board);
+    showThinking(false);
+    if(move) executeMove(move, 'w');
+  }, 50);
+}
+
+function showThinking(on) {
+  const el = document.getElementById('thinking');
+  el.textContent = on ? '⚙ L\'IA réfléchit...' : '';
+  el.className = 'thinking' + (on?' active':'');
+}
+
+function endGame(winner) {
+  gameOver = true;
+  let title, msg;
+  if(gameMode==='2p') {
+    title = winner==='b' ? '🏆 Joueur 1 gagne !' : '🏆 Joueur 2 gagne !';
+    msg = winner==='b' ? 'Les noirs ont éjecté 6 billes blanches !' : 'Les blancs ont éjecté 6 billes noires !';
+  } else {
+    title = winner==='b' ? '🏆 Victoire !' : '💀 Défaite';
+    msg = winner==='b' ? 'Les noirs ont éjecté 6 billes blanches !' : 'L\'IA a éjecté 6 de vos billes.';
+  }
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-msg').textContent = msg;
+  document.getElementById('modal').classList.add('show');
+  addLog(winner==='b' ? '🏆 Les noirs gagnent !' : (gameMode==='2p'?'🏆 Les blancs gagnent !':'🤖 L\'IA gagne !'));
+  turn = null;
+  updateUI();
+}
+
+// ========================
+// UI UPDATE
+// ========================
+
+function updateUI() {
+  updateScores();
+  updateTurnIndicators();
+  updateBoard();
+  updateEjectedDisplay();
+}
+
+function updateScores() {
+  const {bEjected, wEjected} = countEjected(board);
+  document.getElementById('score-b').textContent = bEjected;
+  document.getElementById('score-w').textContent = wEjected;
+}
+
+function updateTurnIndicators() {
+  document.getElementById('turn-b').className = 'turn-indicator' + (turn==='b'?' active':'');
+  document.getElementById('turn-w').className = 'turn-indicator' + (turn==='w'?' active':'');
+  // Update labels based on mode
+  const labelB = gameMode==='2p' ? 'Joueur 1 (Noir)' : 'Vous (Noir)';
+  const labelW = gameMode==='2p' ? 'Joueur 2 (Blanc)' : 'IA (Blanc)';
+  document.querySelector('#turn-b .turn-label').textContent = labelB;
+  document.querySelector('#turn-w .turn-label').textContent = labelW;
+}
+
+function updateEjectedDisplay() {
+  const {bEjected, wEjected} = countEjected(board);
+  drawEjected('ejected-b', 'b', bEjected);
+  drawEjected('ejected-w', 'w', wEjected);
+}
+
+function drawEjected(svgId, color, count) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = '';
+  // defs
+  const defs = makeSVGEl('defs');
+  const id = 'ej-'+color;
+  const rg = makeSVGEl('radialGradient', {id, cx:'35%',cy:'35%',r:'60%'});
+  const s1 = makeSVGEl('stop', {'offset':'0%','stop-color': color==='b'?'#4040a0':'#ffffff'});
+  const s2 = makeSVGEl('stop', {'offset':'100%','stop-color': color==='b'?'#0a0a18':'#c0b090'});
+  rg.appendChild(s1); rg.appendChild(s2); defs.appendChild(rg); svg.appendChild(defs);
+
+  for(let i=0;i<count;i++) {
+    const x = 14 + (i%6)*20;
+    const y = 14 + Math.floor(i/6)*24;
+    const c = makeSVGEl('circle', {cx:x,cy:y,r:9,fill:`url(#${id})`, stroke: color==='b'?'#2020408':'#d0c0a0','stroke-width':0.5});
+    svg.appendChild(c);
+  }
+}
+
+function updateBoard() {
+  const svg = document.getElementById('board');
+  svg.innerHTML = '';
+
+  // Defs
+  const defs = makeSVGEl('defs');
+
+  // Board texture gradient
+  const bgGrad = makeSVGEl('radialGradient', {id:'boardBg', cx:'50%',cy:'40%',r:'70%'});
+  [['0%','#3a2a12'],['100%','#1a0e04']].forEach(([o,c])=>{
+    const s=makeSVGEl('stop',{'offset':o,'stop-color':c}); bgGrad.appendChild(s);
+  });
+  defs.appendChild(bgGrad);
+
+  // Marble gradients
+  const blackGrad = makeSVGEl('radialGradient', {id:'marbleB', cx:'35%',cy:'30%',r:'65%'});
+  [['0%','#4a4a80'],['50%','#15153a'],['100%','#050510']].forEach(([o,c])=>{
+    const s=makeSVGEl('stop',{'offset':o,'stop-color':c}); blackGrad.appendChild(s);
+  });
+  defs.appendChild(blackGrad);
+
+  const whiteGrad = makeSVGEl('radialGradient', {id:'marbleW', cx:'35%',cy:'30%',r:'65%'});
+  [['0%','#ffffff'],['50%','#e8dfc8'],['100%','#b0a080']].forEach(([o,c])=>{
+    const s=makeSVGEl('stop',{'offset':o,'stop-color':c}); whiteGrad.appendChild(s);
+  });
+  defs.appendChild(whiteGrad);
+
+  // Glow filters
+  const glowB = makeSVGEl('filter', {id:'glowB'});
+  const feGlowB = makeSVGEl('feGaussianBlur', {'stdDeviation':'3', result:'blur'});
+  const feCompB = makeSVGEl('feComposite', {in:'SourceGraphic', in2:'blur', operator:'over'});
+  glowB.appendChild(feGlowB); glowB.appendChild(feCompB); defs.appendChild(glowB);
+
+  const glowSel = makeSVGEl('filter', {id:'glowSel'});
+  const feGlowSel = makeSVGEl('feGaussianBlur', {'stdDeviation':'4', result:'blur'});
+  const feCompSel = makeSVGEl('feMerge');
+  const feMN1 = makeSVGEl('feMergeNode', {in:'blur'});
+  const feMN2 = makeSVGEl('feMergeNode', {in:'SourceGraphic'});
+  feCompSel.appendChild(feMN1); feCompSel.appendChild(feMN2);
+  glowSel.appendChild(feGlowSel); glowSel.appendChild(feCompSel); defs.appendChild(glowSel);
+
+  svg.appendChild(defs);
+
+  // Board background circle
+  const boardBg = makeSVGEl('circle', {cx:CX,cy:CY,r:200, fill:'url(#boardBg)', stroke:'#5a3a10','stroke-width':3});
+  svg.appendChild(boardBg);
+
+  // Determine valid move destinations
+  const validDests = new Set();
+  const pushDests = new Set();
+  validMoves.forEach(m => {
+    m.group.forEach(c => {
+      const dest = [c[0]+m.dir[0], c[1]+m.dir[1]];
+      if(m.type==='push') pushDests.add(key(...dest));
+      else validDests.add(key(...dest));
+    });
+  });
+
+  // Draw all cells
+  const allCells = [];
+  for(let q=-R;q<=R;q++) {
+    for(let r=-R;r<=R;r++) {
+      if(validCell(q,r)) allCells.push([q,r]);
+    }
+  }
+
+  allCells.forEach(([q,r]) => {
+    const [x,y] = axialToPixel(q,r);
+    const k = key(q,r);
+    const isSelected = selected.some(c=>c[0]===q&&c[1]===r);
+    const isValid = validDests.has(k);
+    const isPush = pushDests.has(k);
+
+    // Hex cell
+    const hexPoints = hexCorners(x, y, HEX_SIZE-1);
+    const hex = makeSVGEl('polygon', {
+      points: hexPoints,
+      fill: isSelected ? 'rgba(201,168,76,0.25)' : isPush ? 'rgba(200,110,60,0.15)' : isValid ? 'rgba(80,200,100,0.12)' : 'rgba(20,14,4,0.8)',
+      stroke: isSelected ? '#c9a84c' : isPush ? '#e08050' : isValid ? '#60d060' : '#3a2a10',
+      'stroke-width': isSelected||isValid||isPush ? 1.5 : 0.8,
+      style: 'cursor:pointer'
+    });
+
+    hex.addEventListener('click', () => {
+      if(isValid || isPush) {
+        const mv = validMoves.find(m => m.group.some(c => {
+          const dest=[c[0]+m.dir[0],c[1]+m.dir[1]];
+          return dest[0]===q&&dest[1]===r;
+        }));
+        if(mv) executeMove(mv, turn);
+      } else {
+        handleCellClick(q,r);
+      }
+    });
+    svg.appendChild(hex);
+
+    // Move indicators
+    if(isValid) {
+      const dot = makeSVGEl('circle', {cx:x,cy:y,r:5, fill:'rgba(80,220,100,0.5)', 'pointer-events':'none'});
+      svg.appendChild(dot);
+    }
+    if(isPush) {
+      const dot = makeSVGEl('circle', {cx:x,cy:y,r:5, fill:'rgba(220,100,60,0.5)', 'pointer-events':'none'});
+      svg.appendChild(dot);
+    }
+  });
+
+  // Draw marbles
+  allCells.forEach(([q,r]) => {
+    const k = key(q,r);
+    const piece = board[k];
+    if(!piece) return;
+    const [x,y] = axialToPixel(q,r);
+    const isSelected = selected.some(c=>c[0]===q&&c[1]===r);
+
+    const g = makeSVGEl('g');
+
+    // Shadow
+    const shadow = makeSVGEl('ellipse', {
+      cx: x+2, cy: y+4,
+      rx: MARBLE_R-2, ry: MARBLE_R-5,
+      fill: 'rgba(0,0,0,0.5)',
+      'pointer-events':'none'
+    });
+    g.appendChild(shadow);
+
+    // Marble
+    const circle = makeSVGEl('circle', {
+      cx: x, cy: y, r: MARBLE_R,
+      fill: piece==='b' ? 'url(#marbleB)' : 'url(#marbleW)',
+      stroke: piece==='b'
+        ? (isSelected ? '#8080ff' : '#30306090')
+        : (isSelected ? '#c9a84c' : '#c0b08090'),
+      'stroke-width': isSelected ? 2.5 : 1,
+      filter: isSelected ? 'url(#glowSel)' : '',
+      style: 'cursor:pointer'
+    });
+
+    // Shine spot
+    const shine = makeSVGEl('circle', {
+      cx: x-5, cy: y-5, r: 4,
+      fill: piece==='b' ? 'rgba(120,120,255,0.3)' : 'rgba(255,255,255,0.6)',
+      'pointer-events':'none'
+    });
+
+    g.appendChild(circle);
+    g.appendChild(shine);
+    g.addEventListener('click', () => handleCellClick(q,r));
+    svg.appendChild(g);
+  });
+
+  // Draw coordinates (light)
+  allCells.forEach(([q,r]) => {
+    const [x,y] = axialToPixel(q,r);
+    // minimal label for debugging - commented out for clean look
+  });
+}
+
+function hexCorners(cx, cy, size) {
+  // Pointy-top hex
+  return Array.from({length:6}, (_,i) => {
+    const angle = Math.PI/3*i - Math.PI/6;
+    return `${cx+size*Math.cos(angle)},${cy+size*Math.sin(angle)}`;
+  }).join(' ');
+}
+
+// ========================
+// START
+// ========================
+// Initialize button states
+selectMode('1p');
+selectLevel('medium');
+// Don't auto-start — wait for user to configure and click "Commencer"
+
+// Register service worker (PWA)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+</script>
+</body>
+</html>
