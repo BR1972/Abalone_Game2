@@ -19,26 +19,26 @@
     --marble-white-shine: #ffffff;
     --text: #c8c0b0;
     --text-dim: #5a5060;
-    --board: #2a1f0e;
-    --board-light: #3a2f1a;
     --cell-empty: #1a140a;
-    --cell-hover: rgba(201,168,76,0.15);
-    --cell-selected: rgba(201,168,76,0.35);
-    --cell-valid: rgba(100,200,120,0.2);
     --shadow: 0 20px 60px rgba(0,0,0,0.8);
   }
 
   * { margin:0; padding:0; box-sizing:border-box; }
 
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+  }
+
   body {
     background: var(--bg);
     color: var(--text);
     font-family: 'Lato', sans-serif;
-    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    height: 100dvh;
     overflow: hidden;
   }
 
@@ -50,232 +50,187 @@
     pointer-events:none;
   }
 
-  h1 {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    font-weight: 900;
-    letter-spacing: 0.3em;
-    color: var(--gold);
-    text-shadow: 0 0 40px rgba(201,168,76,0.4);
-    margin-bottom: 4px;
-  }
-
-  .subtitle {
-    font-size: 0.75rem;
-    letter-spacing: 0.2em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 20px;
-  }
-
-  .game-layout {
+  /* ── HEADER ── */
+  .app-header {
+    width: 100%;
     display: flex;
-    align-items: flex-start;
-    gap: 24px;
-    padding: 0 16px;
-  }
-
-  .side-panel {
-    width: 160px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .panel-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-  }
-
-  .panel-box h3 {
-    font-family: 'Cinzel', serif;
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    color: var(--gold-dim);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-
-  .score-display {
-    display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-  }
-
-  .score-player {
-    text-align: center;
-    position: relative;
-  }
-
-  .score-name {
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-  }
-
-  .score-value {
-    font-family: 'Cinzel', serif;
-    font-size: 1.8rem;
-    font-weight: 900;
-    line-height: 1;
-    margin-top: 2px;
-  }
-
-  .score-value.black { color: #8888cc; }
-  .score-value.white { color: var(--gold-light); }
-
-  .score-divider {
-    color: var(--border);
-    font-size: 1.2rem;
-  }
-
-  .turn-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    background: var(--cell-empty);
-    border: 1px solid var(--border);
-    transition: all 0.3s;
-  }
-
-  .turn-indicator.active {
-    border-color: var(--gold-dim);
-    background: rgba(201,168,76,0.05);
-  }
-
-  .turn-marble {
-    width: 16px; height: 16px;
-    border-radius: 50%;
+    padding: 8px 12px 4px;
     flex-shrink: 0;
   }
 
-  .turn-marble.b { background: radial-gradient(circle at 35% 35%, var(--marble-black-shine), var(--marble-black)); box-shadow: 0 2px 6px rgba(0,0,0,0.6); }
-  .turn-marble.w { background: radial-gradient(circle at 35% 35%, var(--marble-white-shine), var(--marble-white)); box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1rem, 5vw, 1.6rem);
+    font-weight: 900;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    text-shadow: 0 0 30px rgba(201,168,76,0.4);
+  }
 
-  .turn-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
+  .subtitle {
+    font-size: clamp(0.5rem, 2vw, 0.65rem);
+    letter-spacing: 0.12em;
     color: var(--text-dim);
+    text-transform: uppercase;
   }
 
-  .turn-indicator.active .turn-label { color: var(--text); }
-
-  .log-box {
-    flex: 1;
-    overflow-y: auto;
-    max-height: 200px;
+  .header-btns {
+    display: flex;
+    gap: 6px;
   }
 
-  .log-entry {
-    font-size: 0.6rem;
-    color: var(--text-dim);
-    padding: 2px 0;
-    border-bottom: 1px solid var(--border);
-    letter-spacing: 0.05em;
-  }
-
-  .log-entry:first-child { color: var(--text); }
-
-  .btn {
-    width: 100%;
-    padding: 10px;
+  .btn-small {
+    padding: 5px 10px;
     background: transparent;
     border: 1px solid var(--gold-dim);
-    border-radius: 8px;
+    border-radius: 6px;
     color: var(--gold);
     font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
   }
-  .btn:hover {
-    background: rgba(201,168,76,0.1);
-    border-color: var(--gold);
+  .btn-small:hover { background: rgba(201,168,76,0.1); border-color: var(--gold); }
+
+  /* ── SCORE BAR (top strip) ── */
+  .score-strip {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
   }
 
-  /* BOARD */
-  .board-container {
+  .score-block {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+  }
+  .score-block.right { justify-content: flex-end; }
+
+  .marble-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .marble-dot.b { background: radial-gradient(circle at 35% 35%, #4040a0, #050510); box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+  .marble-dot.w { background: radial-gradient(circle at 35% 35%, #ffffff, #b0a080); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+  .score-num {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1rem, 4vw, 1.4rem);
+    font-weight: 900;
+    line-height: 1;
     position: relative;
   }
+  .score-num.black { color: #8888cc; }
+  .score-num.white { color: var(--gold-light); }
 
-  svg#board {
-    filter: drop-shadow(0 20px 60px rgba(0,0,0,0.9));
+  .score-label {
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1.2;
   }
 
-  .cell-bg {
+  .score-mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-width: 60px;
+  }
+
+  .score-mid-bar-wrap {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .score-mid-bar {
+    height: 100%;
+    width: 50%;
+    background: linear-gradient(90deg, #6060cc, #c9a84c);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .turn-text {
+    font-size: 0.5rem;
+    color: var(--gold-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* ── WINS BAR ── */
+  .wins-strip {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 12px;
+    flex-shrink: 0;
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .wins-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .wins-val {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+  .wins-val.black { color: #8888cc; }
+  .wins-val.white { color: var(--gold-light); }
+
+  .wins-reset {
+    background: none; border: none;
+    color: var(--text-dim);
+    font-size: 0.5rem;
     cursor: pointer;
-    transition: fill 0.15s;
-  }
-  .cell-bg:hover { fill: rgba(201,168,76,0.12); }
-  .cell-bg.selected { fill: rgba(201,168,76,0.3); }
-  .cell-bg.valid-move { fill: rgba(100,210,130,0.18); }
-  .cell-bg.push-move { fill: rgba(200,120,80,0.18); }
-
-  .marble {
-    cursor: pointer;
-    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    transform-origin: center;
-  }
-  .marble.selected { transform: scale(1.15); }
-  .marble.selectable:hover { transform: scale(1.08); }
-
-  .push-arrow {
-    pointer-events: none;
-    opacity: 0.7;
+    text-decoration: underline;
+    letter-spacing: 0.08em;
   }
 
-  /* Modal */
-  .modal-overlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(4px);
-    z-index: 100;
+  /* ── BOARD AREA ── */
+  .board-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    min-height: 0;
+    padding: 4px;
   }
-  .modal-overlay.show { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--gold-dim);
-    border-radius: 16px;
-    padding: 40px;
-    text-align: center;
-    max-width: 320px;
-    box-shadow: var(--shadow);
-  }
-
-  .modal h2 {
-    font-family: 'Cinzel', serif;
-    font-size: 1.8rem;
-    color: var(--gold);
-    margin-bottom: 8px;
-  }
-
-  .modal p {
-    color: var(--text-dim);
-    font-size: 0.85rem;
-    letter-spacing: 0.1em;
-    margin-bottom: 24px;
-  }
-
-  .modal .btn { width: auto; padding: 12px 32px; display: inline-block; }
 
   .thinking {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
     color: var(--gold-dim);
     letter-spacing: 0.2em;
     text-transform: uppercase;
     text-align: center;
-    height: 16px;
-    margin-bottom: 6px;
+    height: 14px;
+    margin-bottom: 2px;
+    flex-shrink: 0;
   }
 
   @keyframes pulse {
@@ -284,10 +239,83 @@
   }
   .thinking.active { animation: pulse 1.2s ease-in-out infinite; }
 
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  svg#board {
+    filter: drop-shadow(0 8px 30px rgba(0,0,0,0.9));
+    max-width: 100%;
+    max-height: 100%;
+    touch-action: manipulation;
+  }
 
+  /* ── BOTTOM LOG ── */
+  .log-strip {
+    width: 100%;
+    padding: 3px 12px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    font-size: 0.55rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 22px;
+    line-height: 16px;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    border-radius: 16px;
+    padding: 28px 24px;
+    text-align: center;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: var(--shadow);
+  }
+
+  .modal h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .modal p {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    padding: 11px 24px;
+    background: transparent;
+    border: 1px solid var(--gold-dim);
+    border-radius: 8px;
+    color: var(--gold);
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: rgba(201,168,76,0.1); border-color: var(--gold); }
+
+  /* ── MODE / LEVEL BUTTONS ── */
   .mode-btn, .level-btn {
     flex: 1;
     padding: 12px 8px;
@@ -303,221 +331,88 @@
     text-align: center;
   }
   .mode-btn span, .level-btn span {
-    display: block;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
+    display: block; font-size: 0.65rem;
+    letter-spacing: 0.1em; color: var(--text-dim);
   }
-  .mode-btn:hover, .level-btn:hover {
-    border-color: var(--gold-dim);
-    color: var(--text);
-  }
+  .mode-btn:hover, .level-btn:hover { border-color: var(--gold-dim); color: var(--text); }
   .mode-btn.active, .level-btn.active {
     border-color: var(--gold);
     background: rgba(201,168,76,0.1);
     color: var(--gold);
   }
   .mode-btn.active span, .level-btn.active span { color: var(--gold-dim); }
+  .level-easy.active  { border-color:#60d060; background:rgba(96,208,96,0.08);  color:#60d060; }
+  .level-medium.active{ border-color:var(--gold); background:rgba(201,168,76,0.08); color:var(--gold); }
+  .level-hard.active  { border-color:#e06060; background:rgba(224,96,96,0.08);  color:#e06060; }
 
-  .level-easy.active { border-color: #60d060; background: rgba(96,208,96,0.08); color: #60d060; }
-  .level-medium.active { border-color: var(--gold); background: rgba(201,168,76,0.08); color: var(--gold); }
-  .level-hard.active { border-color: #e06060; background: rgba(224,96,96,0.08); color: #e06060; }
-
-  .score-sub {
-    font-size: 0.5rem;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-top: 1px;
-  }
-
-  .score-bar-wrap {
-    margin-top: 10px;
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .score-bar {
-    height: 100%;
-    width: 50%;
-    background: linear-gradient(90deg, #6060cc, #c9a84c);
-    border-radius: 2px;
-    transition: width 0.5s ease;
-  }
-
+  /* ── SCORE ANIMATIONS ── */
   @keyframes scoreFlash {
     0%   { transform: scale(1); }
-    30%  { transform: scale(1.45); color: #fff; }
+    30%  { transform: scale(1.5); color:#fff; }
     60%  { transform: scale(1.2); }
     100% { transform: scale(1); }
   }
-
   @keyframes popUp {
-    0%   { opacity: 1; transform: translateY(0) scale(1); }
-    100% { opacity: 0; transform: translateY(-28px) scale(1.3); }
+    0%   { opacity:1; transform:translateY(0) scale(1) translateX(-50%); }
+    100% { opacity:0; transform:translateY(-24px) scale(1.3) translateX(-50%); }
   }
-
   .score-flash { animation: scoreFlash 0.45s ease; }
-
   .score-popup {
     position: absolute;
+    left: 50%; top: -4px;
     font-family: 'Cinzel', serif;
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 900;
     pointer-events: none;
     animation: popUp 0.8s ease forwards;
+    white-space: nowrap;
   }
   .score-popup.black { color: #8888ff; }
   .score-popup.white { color: #e8c97a; }
 
-  .score-player { position: relative; }
+  /* ── BADGE ── */
+  .badge {
     display: inline-block;
-    font-size: 0.55rem;
-    letter-spacing: 0.15em;
-    padding: 2px 8px;
+    font-size: 0.5rem;
+    letter-spacing: 0.12em;
+    padding: 2px 7px;
     border-radius: 20px;
     text-transform: uppercase;
     font-family: 'Cinzel', serif;
   }
-  .badge.easy { background: rgba(96,208,96,0.15); color: #60d060; border: 1px solid rgba(96,208,96,0.3); }
-  .badge.medium { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
-  .badge.hard { background: rgba(224,96,96,0.15); color: #e06060; border: 1px solid rgba(224,96,96,0.3); }
+  .badge.easy   { background:rgba(96,208,96,0.15);  color:#60d060; border:1px solid rgba(96,208,96,0.3); }
+  .badge.medium { background:rgba(201,168,76,0.15); color:var(--gold); border:1px solid rgba(201,168,76,0.3); }
+  .badge.hard   { background:rgba(224,96,96,0.15);  color:#e06060; border:1px solid rgba(224,96,96,0.3); }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 </style>
 </head>
 <body>
 
-<h1>ABALONE</h1>
-<p class="subtitle" id="subtitle">Jeu de stratégie</p>
-
 <!-- Setup Modal -->
 <div class="modal-overlay show" id="setup-modal">
-  <div class="modal" style="max-width:380px">
+  <div class="modal">
     <h2 style="margin-bottom:6px">ABALONE</h2>
-    <p style="margin-bottom:28px">Configurez votre partie</p>
-
-    <div style="margin-bottom:20px; text-align:left">
-      <div class="panel-box h3" style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Mode de jeu</div>
-      <div style="display:flex;gap:10px;margin-top:8px">
+    <p style="margin-bottom:24px">Configurez votre partie</p>
+    <div style="margin-bottom:18px;text-align:left">
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:8px">Mode de jeu</div>
+      <div style="display:flex;gap:10px">
         <button class="mode-btn active" id="mode-1p" onclick="selectMode('1p')">👤 1 Joueur<br><span>vs IA</span></button>
         <button class="mode-btn" id="mode-2p" onclick="selectMode('2p')">👥 2 Joueurs<br><span>Local</span></button>
       </div>
     </div>
-
-    <div id="ai-options" style="margin-bottom:24px;text-align:left">
-      <div style="font-family:'Cinzel',serif;font-size:0.65rem;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:10px;">Niveau de l'IA</div>
-      <div style="display:flex;gap:8px;margin-top:8px">
+    <div id="ai-options" style="margin-bottom:22px;text-align:left">
+      <div style="font-family:'Cinzel',serif;font-size:0.6rem;letter-spacing:0.2em;color:var(--gold-dim);text-transform:uppercase;margin-bottom:8px">Niveau de l'IA</div>
+      <div style="display:flex;gap:8px">
         <button class="level-btn" id="level-easy" onclick="selectLevel('easy')">🌱<br><span>Facile</span></button>
-        <button class="level-btn active" id="level-medium" onclick="selectLevel('medium')">⚔️<br><span>Moyen</span></button>
+        <button class="level-btn active level-medium" id="level-medium" onclick="selectLevel('medium')">⚔️<br><span>Moyen</span></button>
         <button class="level-btn" id="level-hard" onclick="selectLevel('hard')">🔥<br><span>Difficile</span></button>
       </div>
     </div>
-
-    <button class="btn" style="width:auto;padding:13px 40px;font-size:0.8rem" onclick="startGame()">Commencer</button>
-  </div>
-</div>
-
-<div class="game-layout">
-  <!-- Left panel -->
-  <div class="side-panel">
-    <div class="panel-box">
-      <h3>Partie en cours</h3>
-      <div class="score-display">
-        <div class="score-player">
-          <div class="score-name" id="label-score-b">Noir</div>
-          <div class="score-value black" id="score-b">0</div>
-          <div class="score-sub">billes éjectées</div>
-        </div>
-        <div class="score-divider">·</div>
-        <div class="score-player">
-          <div class="score-name" id="label-score-w">Blanc</div>
-          <div class="score-value white" id="score-w">0</div>
-          <div class="score-sub">billes éjectées</div>
-        </div>
-      </div>
-      <div class="score-bar-wrap">
-        <div class="score-bar" id="score-bar"></div>
-      </div>
-    </div>
-
-    <div class="panel-box">
-      <h3>Score général</h3>
-      <div class="score-display">
-        <div class="score-player">
-          <div class="score-name" id="label-wins-b">Noir</div>
-          <div class="score-value black" id="wins-b">0</div>
-          <div class="score-sub">victoires</div>
-        </div>
-        <div class="score-divider">·</div>
-        <div class="score-player">
-          <div class="score-name" id="label-wins-w">Blanc</div>
-          <div class="score-value white" id="wins-w">0</div>
-          <div class="score-sub">victoires</div>
-        </div>
-      </div>
-      <div style="text-align:center;margin-top:8px">
-        <span id="games-played" style="font-size:0.55rem;color:var(--text-dim);letter-spacing:0.1em">0 partie(s) jouée(s)</span>
-        <button onclick="resetWins()" style="display:block;margin:6px auto 0;background:none;border:none;color:var(--text-dim);font-size:0.55rem;cursor:pointer;letter-spacing:0.1em;text-decoration:underline">Remettre à zéro</button>
-      </div>
-    </div>
-
-    <div class="panel-box">
-      <h3>Tour</h3>
-      <div id="turn-b" class="turn-indicator active">
-        <div class="turn-marble b"></div>
-        <span class="turn-label">Vous (Noir)</span>
-      </div>
-      <div style="height:6px"></div>
-      <div id="turn-w" class="turn-indicator">
-        <div class="turn-marble w"></div>
-        <span class="turn-label">IA (Blanc)</span>
-      </div>
-    </div>
-
-    <div class="panel-box" style="flex:1">
-      <h3>Journal</h3>
-      <div class="log-box" id="log"></div>
-    </div>
-
-    <button class="btn" onclick="showSetup()" style="margin-bottom:6px">Paramètres</button>
-    <button class="btn" onclick="resetGame()">Nouvelle Partie</button>
-  </div>
-
-  <!-- Board -->
-  <div class="board-container">
-    <div class="thinking" id="thinking"></div>
-    <svg id="board" width="520" height="480" viewBox="0 0 520 480"></svg>
-  </div>
-
-  <!-- Right panel: ejected marbles display -->
-  <div class="side-panel">
-    <div class="panel-box">
-      <h3>Billes éjectées</h3>
-      <div style="margin-bottom:8px">
-        <div class="score-name" style="margin-bottom:6px">Noirs éjectés</div>
-        <svg id="ejected-b" width="128" height="60"></svg>
-      </div>
-      <div>
-        <div class="score-name" style="margin-bottom:6px">Blancs éjectés</div>
-        <svg id="ejected-w" width="128" height="60"></svg>
-      </div>
-    </div>
-
-    <div class="panel-box">
-      <h3>Règles</h3>
-      <div style="font-size:0.6rem; color:var(--text-dim); line-height:1.7; letter-spacing:0.05em;">
-        <b style="color:var(--text)">Sélection :</b><br>
-        Cliquez 1, 2 ou 3 billes alignées.<br><br>
-        <b style="color:var(--text)">Déplacement :</b><br>
-        Cliquez une case adjacente valide.<br><br>
-        <b style="color:var(--text)">Sumito :</b><br>
-        Poussez les billes adverses si vous êtes plus nombreux.<br><br>
-        <b style="color:var(--text)">Victoire :</b><br>
-        Éjectez 6 billes adverses.
-      </div>
-    </div>
+    <button class="btn" onclick="startGame()">Commencer</button>
   </div>
 </div>
 
@@ -526,39 +421,95 @@
   <div class="modal">
     <h2 id="modal-title">Victoire !</h2>
     <p id="modal-msg">Les noirs ont gagné la partie.</p>
-    <button class="btn" style="width:auto;padding:12px 32px;display:inline-block;margin-right:8px" onclick="showSetup()">Paramètres</button>
-    <button class="btn" style="width:auto;padding:12px 32px;display:inline-block" onclick="resetGame()">Rejouer</button>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="btn" onclick="showSetup()">Paramètres</button>
+      <button class="btn" onclick="resetGame()">Rejouer</button>
+    </div>
   </div>
 </div>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div>
+    <h1>ABALONE</h1>
+    <div class="subtitle" id="subtitle">Jeu de stratégie</div>
+  </div>
+  <div class="header-btns">
+    <button class="btn-small" onclick="showSetup()">⚙ Config</button>
+    <button class="btn-small" onclick="resetGame()">↺ Reset</button>
+  </div>
+</div>
+
+<!-- SCORE STRIP -->
+<div class="score-strip">
+  <div class="score-block">
+    <div class="marble-dot b"></div>
+    <div style="position:relative">
+      <div class="score-num black" id="score-b">0</div>
+    </div>
+    <div class="score-label" id="label-score-b">Noir<br>éjectés</div>
+  </div>
+
+  <div class="score-mid">
+    <div class="turn-text" id="turn-text">Tour : Noir</div>
+    <div class="score-mid-bar-wrap">
+      <div class="score-mid-bar" id="score-bar"></div>
+    </div>
+    <div class="thinking" id="thinking"></div>
+  </div>
+
+  <div class="score-block right">
+    <div class="score-label" style="text-align:right" id="label-score-w">Blanc<br>éjectés</div>
+    <div style="position:relative">
+      <div class="score-num white" id="score-w">0</div>
+    </div>
+    <div class="marble-dot w"></div>
+  </div>
+</div>
+
+<!-- WINS STRIP -->
+<div class="wins-strip">
+  <div class="wins-item">
+    <div class="marble-dot b" style="width:10px;height:10px"></div>
+    <span id="label-wins-b">Noir</span>
+    <span class="wins-val black" id="wins-b">0</span>
+    <span style="color:var(--border)">victoires</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="games-played">0 partie(s)</span>
+    <button class="wins-reset" onclick="resetWins()">Remise à zéro</button>
+  </div>
+  <div class="wins-item">
+    <span style="color:var(--border)">victoires</span>
+    <span class="wins-val white" id="wins-w">0</span>
+    <span id="label-wins-w">Blanc</span>
+    <div class="marble-dot w" style="width:10px;height:10px"></div>
+  </div>
+</div>
+
+<!-- BOARD -->
+<div class="board-area">
+  <svg id="board" width="520" height="480" viewBox="0 0 520 480"></svg>
+</div>
+
+<!-- LOG STRIP -->
+<div class="log-strip" id="log-strip">Bienvenue sur Abalone</div>
 
 <script>
 // ========================
 // ABALONE ENGINE
 // ========================
 
-// Hexagonal grid: axial coordinates (q, r)
-// Board = hex of radius 4 (cells from -4 to 4)
-
-const R = 4; // board radius
-
-// All valid cells
+const R = 4;
 function validCell(q, r) {
   return Math.abs(q) <= R && Math.abs(r) <= R && Math.abs(q+r) <= R;
 }
-
-// 6 hex directions
-const DIRS = [
-  [1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]
-];
-
-// Convert axial to key
+const DIRS = [[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]];
 function key(q,r){ return `${q},${r}`; }
 function fromKey(k){ const [q,r]=k.split(',').map(Number); return [q,r]; }
 
-// Starting positions
 function initialBoard() {
   const board = {};
-  // Black (bottom)
   const blackCells = [
     [-4,4],[-3,4],[-2,4],[-1,4],[0,4],
     [-4,3],[-3,3],[-2,3],[-1,3],[0,3],[1,3],
@@ -918,8 +869,8 @@ function resetGame() {
 function addLog(msg) {
   log.unshift(msg);
   if(log.length>30) log.pop();
-  const el = document.getElementById('log');
-  el.innerHTML = log.map(l=>`<div class="log-entry">${l}</div>`).join('');
+  const el = document.getElementById('log-strip');
+  if(el) el.textContent = msg;
 }
 
 // ========================
@@ -1075,26 +1026,44 @@ function endGame(winner) {
 function updateUI() {
   updateScores();
   updateWins();
-  updateTurnIndicators();
+  updateTurnText();
   updateBoard();
-  updateEjectedDisplay();
+  scaleBoardToFit();
+}
+
+function scaleBoardToFit() {
+  const area = document.querySelector('.board-area');
+  const svg = document.getElementById('board');
+  if(!area || !svg) return;
+  const aw = area.clientWidth - 8;
+  const ah = area.clientHeight - 8;
+  const scale = Math.min(aw / 520, ah / 480);
+  const w = Math.round(520 * scale);
+  const h = Math.round(480 * scale);
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+}
+
+function updateTurnText() {
+  const el = document.getElementById('turn-text');
+  if(!el) return;
+  if(!turn) { el.textContent = 'Fin de partie'; return; }
+  const nameB = gameMode==='2p' ? 'J1 Noir' : 'Vous (Noir)';
+  const nameW = gameMode==='2p' ? 'J2 Blanc' : 'IA (Blanc)';
+  el.textContent = 'Tour : ' + (turn==='b' ? nameB : nameW);
+  el.style.color = turn==='b' ? '#8888cc' : 'var(--gold-light)';
 }
 
 let _prevBEjected = 0, _prevWEjected = 0;
 
 function updateScores() {
   const {bEjected, wEjected} = countEjected(board);
-
-  // Animate score if it changed
   if(bEjected > _prevBEjected) flashScore('score-b', 'black', bEjected - _prevBEjected);
   if(wEjected > _prevWEjected) flashScore('score-w', 'white', wEjected - _prevWEjected);
   _prevBEjected = bEjected;
   _prevWEjected = wEjected;
-
   document.getElementById('score-b').textContent = bEjected;
   document.getElementById('score-w').textContent = wEjected;
-
-  // Progress bar: Noir éjecte les Blancs → barre penche à droite
   const pct = 50 + (bEjected - wEjected) * (50/6);
   document.getElementById('score-bar').style.width = Math.min(100, Math.max(0, pct)) + '%';
 }
@@ -1132,48 +1101,14 @@ function resetWins() {
 function updatePlayerLabels() {
   const nameB = gameMode==='2p' ? 'J1 Noir' : 'Noir';
   const nameW = gameMode==='2p' ? 'J2 Blanc' : 'Blanc';
-  ['score','wins'].forEach(id => {
-    const elB = document.getElementById(`label-${id}-b`);
-    const elW = document.getElementById(`label-${id}-w`);
-    if(elB) elB.textContent = nameB;
-    if(elW) elW.textContent = nameW;
-  });
+  const lb = document.getElementById('label-score-b'); if(lb) lb.innerHTML = nameB+'<br>éjectés';
+  const lw = document.getElementById('label-score-w'); if(lw) lw.innerHTML = nameW+'<br>éjectés';
+  const wb = document.getElementById('label-wins-b'); if(wb) wb.textContent = nameB;
+  const ww = document.getElementById('label-wins-w'); if(ww) ww.textContent = nameW;
 }
 
-function updateTurnIndicators() {
-  document.getElementById('turn-b').className = 'turn-indicator' + (turn==='b'?' active':'');
-  document.getElementById('turn-w').className = 'turn-indicator' + (turn==='w'?' active':'');
-  // Update labels based on mode
-  const labelB = gameMode==='2p' ? 'Joueur 1 (Noir)' : 'Vous (Noir)';
-  const labelW = gameMode==='2p' ? 'Joueur 2 (Blanc)' : 'IA (Blanc)';
-  document.querySelector('#turn-b .turn-label').textContent = labelB;
-  document.querySelector('#turn-w .turn-label').textContent = labelW;
-}
-
-function updateEjectedDisplay() {
-  const {bEjected, wEjected} = countEjected(board);
-  drawEjected('ejected-b', 'b', bEjected);
-  drawEjected('ejected-w', 'w', wEjected);
-}
-
-function drawEjected(svgId, color, count) {
-  const svg = document.getElementById(svgId);
-  svg.innerHTML = '';
-  // defs
-  const defs = makeSVGEl('defs');
-  const id = 'ej-'+color;
-  const rg = makeSVGEl('radialGradient', {id, cx:'35%',cy:'35%',r:'60%'});
-  const s1 = makeSVGEl('stop', {'offset':'0%','stop-color': color==='b'?'#4040a0':'#ffffff'});
-  const s2 = makeSVGEl('stop', {'offset':'100%','stop-color': color==='b'?'#0a0a18':'#c0b090'});
-  rg.appendChild(s1); rg.appendChild(s2); defs.appendChild(rg); svg.appendChild(defs);
-
-  for(let i=0;i<count;i++) {
-    const x = 14 + (i%6)*20;
-    const y = 14 + Math.floor(i/6)*24;
-    const c = makeSVGEl('circle', {cx:x,cy:y,r:9,fill:`url(#${id})`, stroke: color==='b'?'#2020408':'#d0c0a0','stroke-width':0.5});
-    svg.appendChild(c);
-  }
-}
+// resize board when window changes
+window.addEventListener('resize', scaleBoardToFit);
 
 function updateBoard() {
   const svg = document.getElementById('board');
