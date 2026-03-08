@@ -2,14 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Abalone">
-<meta name="theme-color" content="#0a0a0f">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icons/icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Abalone</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Lato:wght@300;400&display=swap" rel="stylesheet">
 <style>
@@ -113,6 +106,7 @@
 
   .score-player {
     text-align: center;
+    position: relative;
   }
 
   .score-name {
@@ -329,7 +323,56 @@
   .level-medium.active { border-color: var(--gold); background: rgba(201,168,76,0.08); color: var(--gold); }
   .level-hard.active { border-color: #e06060; background: rgba(224,96,96,0.08); color: #e06060; }
 
-  .badge {
+  .score-sub {
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .score-bar-wrap {
+    margin-top: 10px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .score-bar {
+    height: 100%;
+    width: 50%;
+    background: linear-gradient(90deg, #6060cc, #c9a84c);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  @keyframes scoreFlash {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.45); color: #fff; }
+    60%  { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes popUp {
+    0%   { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-28px) scale(1.3); }
+  }
+
+  .score-flash { animation: scoreFlash 0.45s ease; }
+
+  .score-popup {
+    position: absolute;
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 900;
+    pointer-events: none;
+    animation: popUp 0.8s ease forwards;
+  }
+  .score-popup.black { color: #8888ff; }
+  .score-popup.white { color: #e8c97a; }
+
+  .score-player { position: relative; }
     display: inline-block;
     font-size: 0.55rem;
     letter-spacing: 0.15em;
@@ -380,17 +423,43 @@
   <!-- Left panel -->
   <div class="side-panel">
     <div class="panel-box">
-      <h3>Score</h3>
+      <h3>Partie en cours</h3>
       <div class="score-display">
         <div class="score-player">
-          <div class="score-name">Noir</div>
+          <div class="score-name" id="label-score-b">Noir</div>
           <div class="score-value black" id="score-b">0</div>
+          <div class="score-sub">billes éjectées</div>
         </div>
         <div class="score-divider">·</div>
         <div class="score-player">
-          <div class="score-name">Blanc</div>
+          <div class="score-name" id="label-score-w">Blanc</div>
           <div class="score-value white" id="score-w">0</div>
+          <div class="score-sub">billes éjectées</div>
         </div>
+      </div>
+      <div class="score-bar-wrap">
+        <div class="score-bar" id="score-bar"></div>
+      </div>
+    </div>
+
+    <div class="panel-box">
+      <h3>Score général</h3>
+      <div class="score-display">
+        <div class="score-player">
+          <div class="score-name" id="label-wins-b">Noir</div>
+          <div class="score-value black" id="wins-b">0</div>
+          <div class="score-sub">victoires</div>
+        </div>
+        <div class="score-divider">·</div>
+        <div class="score-player">
+          <div class="score-name" id="label-wins-w">Blanc</div>
+          <div class="score-value white" id="wins-w">0</div>
+          <div class="score-sub">victoires</div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:8px">
+        <span id="games-played" style="font-size:0.55rem;color:var(--text-dim);letter-spacing:0.1em">0 partie(s) jouée(s)</span>
+        <button onclick="resetWins()" style="display:block;margin:6px auto 0;background:none;border:none;color:var(--text-dim);font-size:0.55rem;cursor:pointer;letter-spacing:0.1em;text-decoration:underline">Remettre à zéro</button>
       </div>
     </div>
 
@@ -799,6 +868,7 @@ function startGame() {
   } else {
     document.getElementById('subtitle').textContent = '2 joueurs — Noir vs Blanc';
   }
+  updatePlayerLabels();
   resetGame();
 }
 
@@ -829,6 +899,7 @@ function makeSVGEl(tag, attrs={}) {
 // ========================
 
 let board, turn, selected, validMoves, gameOver, log;
+let winsB = 0, winsW = 0, gamesPlayed = 0;
 
 function resetGame() {
   board = initialBoard();
@@ -837,6 +908,8 @@ function resetGame() {
   validMoves = [];
   gameOver = false;
   log = [];
+  _prevBEjected = 0;
+  _prevWEjected = 0;
   document.getElementById('modal').classList.remove('show');
   updateUI();
   addLog('Nouvelle partie démarrée');
@@ -904,10 +977,10 @@ function handleCellClick(q, r) {
     }
   }
 
-  // Compute valid moves
+  // Compute valid moves for the current player
   if(selected.length > 0) {
     const sortedSel = [...selected].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
-    validMoves = getMoves(board, 'b', sortedSel);
+    validMoves = getMoves(board, turn, sortedSel);
   } else {
     validMoves = [];
   }
@@ -976,6 +1049,9 @@ function showThinking(on) {
 
 function endGame(winner) {
   gameOver = true;
+  gamesPlayed++;
+  if(winner==='b') winsB++; else winsW++;
+
   let title, msg;
   if(gameMode==='2p') {
     title = winner==='b' ? '🏆 Joueur 1 gagne !' : '🏆 Joueur 2 gagne !';
@@ -998,15 +1074,70 @@ function endGame(winner) {
 
 function updateUI() {
   updateScores();
+  updateWins();
   updateTurnIndicators();
   updateBoard();
   updateEjectedDisplay();
 }
 
+let _prevBEjected = 0, _prevWEjected = 0;
+
 function updateScores() {
   const {bEjected, wEjected} = countEjected(board);
+
+  // Animate score if it changed
+  if(bEjected > _prevBEjected) flashScore('score-b', 'black', bEjected - _prevBEjected);
+  if(wEjected > _prevWEjected) flashScore('score-w', 'white', wEjected - _prevWEjected);
+  _prevBEjected = bEjected;
+  _prevWEjected = wEjected;
+
   document.getElementById('score-b').textContent = bEjected;
   document.getElementById('score-w').textContent = wEjected;
+
+  // Progress bar: Noir éjecte les Blancs → barre penche à droite
+  const pct = 50 + (bEjected - wEjected) * (50/6);
+  document.getElementById('score-bar').style.width = Math.min(100, Math.max(0, pct)) + '%';
+}
+
+function flashScore(elId, colorClass, delta) {
+  const el = document.getElementById(elId);
+  if(!el) return;
+  // Flash the number
+  el.classList.remove('score-flash');
+  void el.offsetWidth; // reflow to restart animation
+  el.classList.add('score-flash');
+  el.addEventListener('animationend', () => el.classList.remove('score-flash'), {once:true});
+
+  // +1 popup
+  const popup = document.createElement('div');
+  popup.className = `score-popup ${colorClass}`;
+  popup.textContent = `+${delta}`;
+  popup.style.cssText = 'top:-4px;left:50%;transform:translateX(-50%)';
+  el.parentElement.appendChild(popup);
+  popup.addEventListener('animationend', () => popup.remove());
+}
+
+function updateWins() {
+  document.getElementById('wins-b').textContent = winsB;
+  document.getElementById('wins-w').textContent = winsW;
+  document.getElementById('games-played').textContent = `${gamesPlayed} partie(s) jouée(s)`;
+}
+
+function resetWins() {
+  winsB = 0; winsW = 0; gamesPlayed = 0;
+  updateWins();
+  addLog('Score général remis à zéro');
+}
+
+function updatePlayerLabels() {
+  const nameB = gameMode==='2p' ? 'J1 Noir' : 'Noir';
+  const nameW = gameMode==='2p' ? 'J2 Blanc' : 'Blanc';
+  ['score','wins'].forEach(id => {
+    const elB = document.getElementById(`label-${id}-b`);
+    const elW = document.getElementById(`label-${id}-w`);
+    if(elB) elB.textContent = nameB;
+    if(elW) elW.textContent = nameW;
+  });
 }
 
 function updateTurnIndicators() {
@@ -1217,13 +1348,6 @@ function hexCorners(cx, cy, size) {
 selectMode('1p');
 selectLevel('medium');
 // Don't auto-start — wait for user to configure and click "Commencer"
-
-// Register service worker (PWA)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
-}
 
 </script>
 </body>
